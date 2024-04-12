@@ -1,0 +1,27 @@
+#include<stdio.h> 
+#include<mpi.h> 
+#include<stdlib.h> 
+ void initialize(float* inarray, int n) 
+{ int 
+i; 
+ float sum=0; 
+ for (i=0; i<n; i++) 
+ { 
+ inarray[i] = random() / (float)RAND_MAX; 
+ printf("%f\t",inarray[i]); 
+ sum=sum+inarray[i]; 
+ } 
+ printf("\nTotal sum is : %f \n",sum); 
+} 
+void main(int argc, char* argv[]) 
+{ 
+ MPI_Comm comm=MPI_COMM_WORLD; 
+ int numnodes, myid, ierr; 
+ ierr=MPI_Init(&argc, &argv); 
+ierr=MPI_Comm_size(comm, &numnodes); 
+ ierr=MPI_Comm_rank(comm, &myid); 
+ int n = 100; 
+ float *x = malloc(sizeof(float)*n); 
+ initialize(x, n); 
+ ierr=MPI_Finalize(); 
+} 
