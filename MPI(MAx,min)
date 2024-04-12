@@ -1,0 +1,44 @@
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+#include <limits.h>
+#define ARRAY_SIZE 1000
+int main(int argc, char **argv) {
+int rank, size;
+int min_local = INT_MAX, max_local = INT_MIN;
+int min_global, max_global;
+int *data = NULL;
+MPI_Init(&argc, &argv);
+MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+MPI_Comm_size(MPI_COMM_WORLD, &size);
+// Allocate memory for the local portion of the array
+data = (int *)malloc(ARRAY_SIZE / size * sizeof(int));
+if (data == NULL) {
+fprintf(stderr, "Memory allocation failed.\n");
+MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+}
+// Seed random number generator
+srand(rank + 1); // Adding rank to ensure different seed for each process
+// Fill local portion of the array with random numbers
+for (int i = 0; i < ARRAY_SIZE / size; ++i) {
+data[i] = rand();
+}
+// Compute local min and max
+for (int i = 0; i < ARRAY_SIZE / size; ++i) {
+if (data[i] < min_local) min_local = data[i];
+if (data[i] > max_local) max_local = data[i];
+}
+// Reduce min and max values across all processes
+MPI_Reduce(&min_local, &min_global, 1, MPI_INT, MPI_MIN, 0, MPI_COMM_WORLD);
+MPI_Reduce(&max_local, &max_global, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+// Output results from root process
+if (rank == 0) {
+printf("Minimum number: %d\n", min_global);
+printf("Maximum number: %d\n", max_global);
+}
+// Clean up
+free(data);
+MPI_Finalize();
+return EXIT_SUCCESS;
+}
